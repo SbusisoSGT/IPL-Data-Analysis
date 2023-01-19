@@ -2,9 +2,16 @@ import pandas as pd
 from dateutil.parser import parse
 
 class BowlerStats:
-    def __init__(self):
+    def __init__(self, season=None):
         self.matches = pd.read_csv('C:/Users/Princess Muthimunye/OneDrive/Documents/Machine Learning Datasets/IPL Dataset and Code/IPL Matches 2008-2020.csv')
         self.deliveries = pd.read_csv('C:/Users/Princess Muthimunye/OneDrive/Documents/Machine Learning Datasets/IPL Dataset and Code/IPL Ball-by-Ball 2008-2020.csv')
+        self.matches['season'] = pd.DatetimeIndex(self.matches['date'], dayfirst=True).year
+        
+        if(season != None):
+            self.season = season
+            matches_ids = self.matches[self.matches['season'] == season].reset_index()['id']
+            matches_season = pd.DataFrame(matches_ids, columns=['id'])
+            self.deliveries = self.deliveries.merge(matches_season, on='id')
 
     def player_career(self, player):
         return self.deliveries[self.deliveries['bowler'] == player]
@@ -37,8 +44,15 @@ class BowlerStats:
     def wickets(self, career):
         return int (career[['bowler', 'is_wicket']].groupby('bowler').sum()['is_wicket'])
 
+    def average(self, career):
+        return round ( self.runs_conceded(career) / self.wickets(career),  ndigits=1 )
+
+
     def economy(self, career):
         return round ( self.runs_conceded(career) / self.overs_faced(career),  ndigits=1 )
+
+    def strike_rate(self, career):
+        return round ( ((self.overs_faced(career) * 6) / self.wickets(career) ) , ndigits=1)
 
     def fivers(self, career):
         wickets = career[['id', 'is_wicket']].groupby('id').sum()
@@ -48,21 +62,25 @@ class BowlerStats:
         wickets = career[['id', 'is_wicket']].groupby('id').sum()
         return wickets[wickets['is_wicket'] == 4]['is_wicket'].count()
 
-    def player_career_stats(self, players):
+    def top_ten_bowlers(self):
+        bowlers = self.deliveries[['bowler', 'is_wicket']].groupby('bowler').sum().sort_values(by='is_wicket', ascending=False)[:10]
+        return bowlers.index
+
+    def player_career_stats(self, players=None):
         stats = []
+
+        players = self.top_ten_bowlers()
 
         for player in players:
             career = self.player_career(player)
-            row = [self.matches_played(career), self.overs_faced(career), self.runs_conceded(career), self.wickets(career), self.best_bowling_figures(player), self.economy(career), self.fourvers(career), self.fivers(career)]
+            row = [self.matches_played(career), self.overs_faced(career), self.runs_conceded(career), self.wickets(career), self.best_bowling_figures(player), self.average(career),self.economy(career), self.strike_rate(career), self.fourvers(career), self.fivers(career)]
             
             stats.append(row)
 
-        columns = ['Mat', 'Ov', 'Runs', 'Wkts', 'BBF', 'Econ', '4w', '5w']
+        columns = ['Mat', 'Ov', 'Runs', 'Wkts', 'BBF', 'Avg', 'Econ', 'SR', '4w', '5w']
         return print (pd.DataFrame(stats, index=[players], columns=columns).sort_values(by='Wkts', ascending=False) )
 
 
 # Player Summary Statistics 
-players = ['SL Malinga', 'DJ Bravo', 'R Ashwin', 'K Rabada', 'B Kumar', 'JJ Bumrah', 'YS Chahal', 'DW Steyn', 'CH Morris',]
-
-stats = BowlerStats()
-stats.player_career_stats(players)
+stats = BowlerStats(season=2012)
+stats.player_career_stats()

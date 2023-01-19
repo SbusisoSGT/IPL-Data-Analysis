@@ -32,6 +32,15 @@ class MatchStats:
     def runs_scored(self, match_deliveries):
         return int (match_deliveries[['batsman', 'batsman_runs']].groupby('batsman').sum()['batsman_runs'])
 
+    def batsman_not_out(self, match_deliveries):
+        return match_deliveries[match_deliveries['is_wicket'] == 1].empty
+
+    def highscore(self, match_deliveries):
+        if(self.batsman_not_out(match_deliveries)):
+            return str (self.runs_scored(match_deliveries)) + '*'
+        else:
+            return self.runs_scored(match_deliveries)
+    
     def balls_faced(self, match_deliveries):
         return int( match_deliveries[match_deliveries['extra_runs'] == 0][['batsman', 'ball']].groupby('batsman').count()['ball'])
 
@@ -51,7 +60,7 @@ class MatchStats:
             best_match = self.player_best_match(player)
             match_deliveries = self.best_match_deliveries(player)
 
-            row = [self.runs_scored(match_deliveries), self.balls_faced(match_deliveries), self.strike_rate(match_deliveries), self.fours_scored(match_deliveries), self.sixes_scored(match_deliveries), self.city(best_match), self.season(best_match)]
+            row = [self.runs_scored(match_deliveries), self.balls_faced(match_deliveries), self.strike_rate(match_deliveries), self.fours_scored(match_deliveries), self.sixes_scored(match_deliveries),self.city(best_match), self.season(best_match)]
             stats.append(row)
 
         columns = ['Runs', 'BF', 'SR', '4s', '6s', 'City', 'Season']
