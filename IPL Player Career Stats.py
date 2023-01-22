@@ -1,11 +1,11 @@
 import pandas as pd
 
 class CareerStats:
-    def __init__(self, season=None):
+    def __init__(self, season = None):
         self.matches = pd.read_csv('C:/Users/Princess Muthimunye/OneDrive/Documents/Machine Learning Datasets/IPL Dataset and Code/IPL Matches 2008-2020.csv')
-        self.matches['season'] = pd.DatetimeIndex(self.matches['date'], dayfirst=True).year
         self.deliveries = pd.read_csv('C:/Users/Princess Muthimunye/OneDrive/Documents/Machine Learning Datasets/IPL Dataset and Code/IPL Ball-by-Ball 2008-2020.csv')
-
+        self.matches['season'] = pd.DatetimeIndex(self.matches['date'], dayfirst=True).year
+        
         if(season != None):
             self.season = season
             matches_ids = self.matches[self.matches['season'] == season].reset_index()['id']
@@ -25,7 +25,7 @@ class CareerStats:
         return int( career[['batsman', 'batsman_runs']].groupby('batsman').sum()['batsman_runs'] )
 
     def balls_faced(self, career):
-        return int( career[career['extra_runs'] == 0][['batsman', 'ball']].groupby('batsman').count()['ball'])
+        return int( career[career['extras_type'] != 'wides'][['batsman', 'ball']].groupby('batsman').count()['ball'])
 
     def highscore_dismissed(self, career):
         highscore = career[['id', 'batsman', 'batsman_runs']].groupby(['id', 'batsman']).sum(numeric_only=True).sort_values(by='batsman_runs' ,ascending=False)[:1]
@@ -47,16 +47,16 @@ class CareerStats:
         return int(self.innings_runs(career)[:1]['batsman_runs'])
 
     def average(self, career):
-        return round (float (career[['id', 'batsman', 'batsman_runs']].groupby(['id', 'batsman']).sum().groupby('batsman').mean()['batsman_runs']), ndigits=2)
+        return round (float (career[['id', 'batsman', 'batsman_runs']].groupby(['id', 'batsman']).sum().groupby('batsman').mean()['batsman_runs']), ndigits=1)
 
     def strike_rate(self, career):
-        return round (( self.runs_scored(career) / self.balls_faced(career) ) * 100, ndigits=2)
+        return round (( self.runs_scored(career) / self.balls_faced(career) ) * 100, ndigits=1)
 
     def top_ten_batsmen(self):
         batsmen = self.deliveries[['batsman', 'batsman_runs']].groupby('batsman').sum().sort_values(by='batsman_runs', ascending=False)[:10]
         return batsmen.index
 
-    def player_stats(self, players=None):
+    def player_stats(self, players=None, sortby=['Runs', False]):
         stats = []
 
         if (players == None):
@@ -71,11 +71,11 @@ class CareerStats:
                 stats.append(row)
 
         columns = ['Mat', 'Runs', 'BF', 'Avg', 'SR', 'HS', '100', '50', '4s', '6s']
-        return print( pd.DataFrame(stats, index=[players], columns=columns).sort_values(by='Runs', ascending=False) )
+        return print( pd.DataFrame(stats, index=[players], columns=columns).sort_values(by=sortby[0], ascending=sortby[1]) )
 
 
 # Player Summary Statistics 
 players = ['V Kohli', 'CH Gayle', 'DA Warner', 'BB McCullum', 'KL Rahul', 'AB de Villiers', 'S Dhawan']
 
 stats = CareerStats(season=2020)
-stats.player_stats(players=None)
+stats.player_stats()

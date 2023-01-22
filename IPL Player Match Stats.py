@@ -42,10 +42,10 @@ class MatchStats:
             return self.runs_scored(match_deliveries)
     
     def balls_faced(self, match_deliveries):
-        return int( match_deliveries[match_deliveries['extra_runs'] == 0][['batsman', 'ball']].groupby('batsman').count()['ball'])
-
+        return int( match_deliveries[match_deliveries['extras_type'] != 'wides'][['batsman', 'ball']].groupby('batsman').count()['ball'])
+        
     def strike_rate(self, match_deliveries):
-        return round (( self.runs_scored(match_deliveries) / self.balls_faced(match_deliveries) ) * 100, ndigits=2)
+        return round (( self.runs_scored(match_deliveries) / self.balls_faced(match_deliveries) ) * 100, ndigits=1)
 
     def sixes_scored(self, match_deliveries):
         return int (match_deliveries[['batsman', 'batsman_runs']][match_deliveries['batsman_runs'] == 6].groupby('batsman').count()['batsman_runs'])

@@ -66,7 +66,7 @@ class BowlerStats:
         bowlers = self.deliveries[['bowler', 'is_wicket']].groupby('bowler').sum().sort_values(by='is_wicket', ascending=False)[:10]
         return bowlers.index
 
-    def player_career_stats(self, players=None):
+    def player_career_stats(self, players=None, sortby=['Wkts', False]):
         stats = []
 
         players = self.top_ten_bowlers()
@@ -78,9 +78,9 @@ class BowlerStats:
             stats.append(row)
 
         columns = ['Mat', 'Ov', 'Runs', 'Wkts', 'BBF', 'Avg', 'Econ', 'SR', '4w', '5w']
-        return print (pd.DataFrame(stats, index=[players], columns=columns).sort_values(by='Wkts', ascending=False) )
+        return print (pd.DataFrame(stats, index=[players], columns=columns).sort_values(by=sortby[0], ascending=sortby[1]) )
 
 
 # Player Summary Statistics 
-stats = BowlerStats(season=2012)
-stats.player_career_stats()
+stats = BowlerStats(season=2020)
+stats.player_career_stats(sortby=['4w', False])
